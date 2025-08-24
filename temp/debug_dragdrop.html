@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drag Drop Debug</title>
+    <style>
+        .container { 
+            width: 300px; 
+            height: 200px; 
+            border: 2px solid #000; 
+            margin: 20px;
+            padding: 10px;
+            float: left;
+        }
+        .item { 
+            background: #f0f0f0; 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            margin: 5px;
+            cursor: move;
+        }
+        .drag-over { 
+            background: #e0e0ff; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Drag/Drop Test</h1>
+    
+    <div class="container" id="container1">
+        <h3>Container 1</h3>
+        <div class="item" draggable="true" data-item="item1">Item 1</div>
+        <div class="item" draggable="true" data-item="item2">Item 2</div>
+    </div>
+    
+    <div class="container" id="container2">
+        <h3>Container 2</h3>
+        <div class="item" draggable="true" data-item="item3">Item 3</div>
+        <div class="item" draggable="true" data-item="item4">Item 4</div>
+    </div>
+    
+    <div style="clear: both;"></div>
+    <div id="log"></div>
+    
+    <script>
+        let draggedItem = null;
+        
+        function log(message) {
+            document.getElementById('log').innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+        }
+        
+        // Set up drag events for all items
+        document.querySelectorAll('.item').forEach(item => {
+            item.addEventListener('dragstart', function(e) {
+                draggedItem = this;
+                e.dataTransfer.setData('text/plain', this.dataset.item);
+                log('Drag started: ' + this.dataset.item);
+            });
+            
+            item.addEventListener('dragend', function(e) {
+                draggedItem = null;
+                log('Drag ended: ' + this.dataset.item);
+            });
+        });
+        
+        // Set up drop zones
+        document.querySelectorAll('.container').forEach(container => {
+            container.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            });
+            
+            container.addEventListener('dragleave', function(e) {
+                this.classList.remove('drag-over');
+            });
+            
+            container.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                
+                const itemId = e.dataTransfer.getData('text/plain');
+                log('Drop attempt: ' + itemId + ' into ' + this.id);
+                
+                if (draggedItem && draggedItem.dataset.item === itemId) {
+                    // Move the item
+                    this.appendChild(draggedItem);
+                    log('Successfully moved: ' + itemId);
+                } else {
+                    log('ERROR: draggedItem mismatch or missing');
+                }
+            });
+        });
+        
+        log('Debug drag/drop test initialized');
+    </script>
+</body>
+</html>
