@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Configuration Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .config-section { border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .column-item { padding: 8px; margin: 2px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
+        .column-included { background-color: #d4edda; border-color: #28a745; }
+        .column-excluded { background-color: #f8d7da; border-color: #dc3545; }
+        .column-hidden { background-color: #fff3cd; border-color: #ffc107; }
+        .drag-over { background-color: #e9ecef; }
+        .json-editor { font-family: 'Courier New', monospace; }
+        .action-buttons { position: sticky; top: 10px; z-index: 1000; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-cogs me-2"></i>Report Configuration Admin</h2>
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="saveConfiguration()">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
+                        <button class="btn btn-warning" onclick="resetForm()">
+                            <i class="fas fa-undo me-1"></i>Reset
+                        </button>
+                        <button class="btn btn-secondary" onclick="location.href='/dashboard/dashboard'">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notification Area -->
+                <div id="notificationArea"></div>
+
+                <!-- Report Lookup Section -->
+                <div class="config-section">
+                    <h4><i class="fas fa-search me-2"></i>Report Lookup</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="reportId" class="form-label">Report ID</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="reportId" placeholder="e.g., FIN001, TTL202">
+                                <button class="btn btn-primary" onclick="fetchReport()">
+                                    <i class="fas fa-search"></i> Fetch
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Quick Actions</label><br>
+                            <button class="btn btn-outline-success btn-sm" onclick="createNewReport()">
+                                <i class="fas fa-plus me-1"></i>New Report
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm ms-2" onclick="deleteReport()" id="deleteBtn" disabled>
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Operation Mode</label><br>
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="operationMode" id="modeUpdate" value="update" checked>
+                                <label class="btn btn-outline-primary btn-sm" for="modeUpdate">Update</label>
+                                <input type="radio" class="btn-check" name="operationMode" id="modeInsert" value="insert">
+                                <label class="btn btn-outline-success btn-sm" for="modeInsert">Insert</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basic Report Info -->
+                <div class="config-section" id="basicInfoSection" style="display: none;">
+                    <h4><i class="fas fa-info-circle me-2"></i>Basic Report Information</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="reportName" class="form-label">Report Name</label>
+                            <input type="text" class="form-control" id="reportName">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="reportDesc" class="form-label">Report Description</label>
+                            <input type="text" class="form-control" id="reportDesc">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label for="reportType" class="form-label">Report Type</label>
+                            <select class="form-control" id="reportType">
+                                <option value="CLASS">CLASS</option>
+                                <option value="SQL">SQL</option>
+                                <option value="PROCEDURE">PROCEDURE</option>
+                                <option value="TEMPLATE">TEMPLATE</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="reportSource" class="form-label">Report Source</label>
+                            <input type="text" class="form-control" id="reportSource" placeholder="e.g., FIN001Report">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="outputFormats" class="form-label">Output Formats</label>
+                            <input type="text" class="form-control" id="outputFormats" value="HTML,PDF,EXCEL">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">Category</label>
+                            <input type="text" class="form-control" id="category" placeholder="e.g., FINANCE">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="activeFlag" checked>
+                                <label class="form-check-label" for="activeFlag">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parameters Section -->
+                <div class="config-section" id="parametersSection" style="display: none;">
+                    <h4><i class="fas fa-sliders-h me-2"></i>Report Parameters</h4>
+                    <div class="d-flex justify-content-between mb-3">
+                        <button class="btn btn-success btn-sm" onclick="addParameter()">
+                            <i class="fas fa-plus me-1"></i>Add Parameter
+                        </button>
+                        <button class="btn btn-info btn-sm" onclick="autoGenerateParams()">
+                            <i class="fas fa-magic me-1"></i>Auto-Generate
+                        </button>
+                    </div>
+                    <div id="parametersContainer">
+                        <!-- Parameters will be dynamically added here -->
+                    </div>
+                </div>
+
+                <!-- Column Management Section -->
+                <div class="config-section" id="columnsSection" style="display: none;">
+                    <h4><i class="fas fa-columns me-2"></i>Column Management</h4>
+                    
+                    <!-- Column Headers Editor -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6>Column Headers (Rename Columns)</h6>
+                            <div id="columnHeadersContainer">
+                                <!-- Column headers will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column Visibility -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Available Columns</h6>
+                            <div class="border p-3" style="height: 300px; overflow-y: auto;" id="availableColumns">
+                                <p class="text-muted">Fetch a report to see available columns</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Displayed Columns</h6>
+                            <div class="border p-3" style="height: 300px; overflow-y: auto;" 
+                                 id="displayedColumns">
+                                <p class="text-muted">Drag columns here to display</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Hidden Columns</h6>
+                            <div class="border p-3" style="height: 300px; overflow-y: auto;" 
+                                 id="hiddenColumns">
+                                <p class="text-muted">Drag columns here to hide</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSON Preview Section -->
+                <div class="config-section" id="jsonSection" style="display: none;">
+                    <h4><i class="fas fa-code me-2"></i>JSON Configuration Preview</h4>
+                    <textarea class="form-control json-editor" id="jsonPreview" rows="15" readonly></textarea>
+                    <div class="mt-2">
+                        <button class="btn btn-secondary btn-sm" onclick="copyJson()">
+                            <i class="fas fa-copy me-1"></i>Copy JSON
+                        </button>
+                        <button class="btn btn-warning btn-sm ms-2" onclick="editJson()">
+                            <i class="fas fa-edit me-1"></i>Edit JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parameter Modal -->
+    <div class="modal fade" id="parameterModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Parameter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="parameterForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Parameter Name</label>
+                                <input type="text" class="form-control" id="paramName">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Field Name</label>
+                                <input type="text" class="form-control" id="paramField">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Type</label>
+                                <select class="form-control" id="paramType">
+                                    <option value="text">Text</option>
+                                    <option value="number">Number</option>
+                                    <option value="date">Date</option>
+                                    <option value="select">Select</option>
+                                    <option value="checkbox">Checkbox</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Default Value</label>
+                                <input type="text" class="form-control" id="paramDefault">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="paramRequired">
+                                    <label class="form-check-label" for="paramRequired">Required</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control" id="paramDescription">
+                            </div>
+                        </div>
+                        <div class="row mt-3" id="selectOptionsSection" style="display: none;">
+                            <div class="col-12">
+                                <label class="form-label">Select Options (JSON format)</label>
+                                <textarea class="form-control" id="paramOptions" rows="3" 
+                                          placeholder='[{"value": "C", "text": "Current"}, {"value": "P", "text": "Previous"}]'></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveParameter()">Save Parameter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentReport = null;
+        let currentColumns = [];
+        let editingParameterIndex = -1;
+
+        // Notification functions
+        function showNotification(message, type = 'info', duration = 5000) {
+            const notificationArea = document.getElementById('notificationArea');
+            const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            notificationArea.appendChild(notification);
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, duration);
+        }
+
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        function showInfo(message) {
+            showNotification(message, 'info');
+        }
+
+        // Fetch report configuration
+        async function fetchReport() {
+            const reportId = document.getElementById('reportId').value.trim().toUpperCase();
+            if (!reportId) {
+                showError('Please enter a Report ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/reports/admin/config/${reportId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    currentReport = result.data;
+                    populateForm(result.data);
+                    if (result.columns) {
+                        currentColumns = result.columns;
+                        populateColumns(result.columns);
+                    }
+                    showAllSections();
+                    document.getElementById('deleteBtn').disabled = false;
+                } else {
+                    showError('Report not found: ' + result.error);
+                    resetForm();
+                }
+            } catch (error) {
+                showError('Error fetching report: ' + error.message);
+            }
+        }
+
+        // Populate form with report data
+        function populateForm(data) {
+            document.getElementById('reportName').value = data.rpt_name || '';
+            document.getElementById('reportDesc').value = data.rpt_desc || '';
+            document.getElementById('reportType').value = data.rpt_type || 'CLASS';
+            document.getElementById('reportSource').value = data.rpt_source || '';
+            document.getElementById('outputFormats').value = data.rpt_output_formats || 'HTML,PDF,EXCEL';
+            document.getElementById('category').value = data.rpt_category || '';
+            document.getElementById('activeFlag').checked = data.rpt_active_flag === 'Y';
+
+            // Populate parameters if they exist
+            if (data.rpt_params) {
+                try {
+                    const params = typeof data.rpt_params === 'string' ? JSON.parse(data.rpt_params) : data.rpt_params;
+                    populateParameters(params.parameters || []);
+                    populateColumnHeaders(params.column_headers || {});
+                    populateColumnVisibility(params);
+                    updateJsonPreview();
+                } catch (e) {
+                    console.error('Error parsing parameters:', e);
+                }
+            }
+        }
+
+        // Populate parameters section
+        function populateParameters(parameters) {
+            const container = document.getElementById('parametersContainer');
+            container.innerHTML = '';
+
+            parameters.forEach((param, index) => {
+                addParameterToDOM(param, index);
+            });
+        }
+
+        // Add parameter to DOM with enhanced functionality
+        function addParameterToDOM(param, index) {
+            const container = document.getElementById('parametersContainer');
+            const paramDiv = document.createElement('div');
+            paramDiv.className = 'card mb-2 parameter-item';
+            paramDiv.draggable = true;
+            paramDiv.setAttribute('data-param-index', index);
+            
+            // Add drag/drop event handlers
+            paramDiv.addEventListener('dragstart', handleParameterDragStart);
+            paramDiv.addEventListener('dragover', handleParameterDragOver);
+            paramDiv.addEventListener('drop', handleParameterDrop);
+            paramDiv.addEventListener('dragend', handleParameterDragEnd);
+            
+            paramDiv.innerHTML = `
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-1">
+                            <div class="drag-handle text-muted text-center">
+                                <i class="fas fa-grip-vertical"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>${param.name}</strong><br>
+                            <small class="text-muted">Field: ${param.field}</small>
+                        </div>
+                        <div class="col-md-1">
+                            <span class="badge bg-secondary">${param.type}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <small>Default: ${param.default || 'None'}</small>
+                        </div>
+                        <div class="col-md-1">
+                            ${param.required ? '<span class="badge bg-warning">Required</span>' : '<span class="badge bg-light text-dark">Optional</span>'}
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <div class="btn-group" role="group">
+                                <div class="form-check form-check-inline me-2">
+                                    <input class="form-check-input parameter-visible" type="checkbox" 
+                                           ${param.visible !== false ? 'checked' : ''} 
+                                           onchange="toggleParameterVisibility(${index}, this.checked)"
+                                           data-param-index="${index}"
+                                           id="paramVisible${index}">
+                                    <label class="form-check-label fw-bold" for="paramVisible${index}" title="Toggle parameter visibility in forms">
+                                        <small class="text-success">
+                                            <i class="fas fa-eye me-1"></i>Show
+                                        </small>
+                                    </label>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editParameterInline(${index})" title="Edit Parameter">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteParameter(${index})" title="Remove Parameter">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Inline edit form (initially hidden) -->
+                    <div class="row mt-3 parameter-edit-form" id="paramEditForm${index}" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="border p-3 bg-light">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Parameter Name</label>
+                                        <input type="text" class="form-control form-control-sm" 
+                                               id="paramName${index}" value="${param.name}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Field Name</label>
+                                        <input type="text" class="form-control form-control-sm" 
+                                               id="paramField${index}" value="${param.field}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Type</label>
+                                        <select class="form-control form-control-sm" id="paramType${index}">
+                                            <option value="text" ${param.type === 'text' ? 'selected' : ''}>Text</option>
+                                            <option value="date" ${param.type === 'date' ? 'selected' : ''}>Date</option>
+                                            <option value="number" ${param.type === 'number' ? 'selected' : ''}>Number</option>
+                                            <option value="select" ${param.type === 'select' ? 'selected' : ''}>Select</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Default Value</label>
+                                        <input type="text" class="form-control form-control-sm" 
+                                               id="paramDefault${index}" value="${param.default || ''}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-check mt-4">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="paramRequired${index}" ${param.required ? 'checked' : ''}>
+                                            <label class="form-check-label" for="paramRequired${index}">Required</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-12 text-end">
+                                        <button class="btn btn-sm btn-success me-1" onclick="saveParameterInline(${index})">
+                                            <i class="fas fa-check"></i> Save
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" onclick="cancelParameterEdit(${index})">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(paramDiv);
+        }
+
+        // Populate column headers
+        function populateColumnHeaders(headers) {
+            const container = document.getElementById('columnHeadersContainer');
+            container.innerHTML = '';
+
+            console.log('Populating column headers:', headers);
+
+            Object.keys(headers).forEach(column => {
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'row mb-2';
+                headerDiv.innerHTML = `
+                    <div class="col-md-4">
+                        <label class="form-label">${column}</label>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control column-header" 
+                               data-column="${column}" value="${headers[column]}"
+                               oninput="updateJsonPreview()">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeColumnHeader('${column}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(headerDiv);
+            });
+        }
+
+        // Remove column header
+        function removeColumnHeader(column) {
+            const headerInputs = document.querySelectorAll(`input[data-column="${column}"]`);
+            headerInputs.forEach(input => {
+                const row = input.closest('.row');
+                if (row) {
+                    row.remove();
+                }
+            });
+            updateJsonPreview();
+        }
+
+        // Populate columns for drag-drop
+        function populateColumns(columns) {
+            const availableContainer = document.getElementById('availableColumns');
+            availableContainer.innerHTML = '';
+
+            columns.forEach(column => {
+                const columnDiv = document.createElement('div');
+                columnDiv.className = 'column-item';
+                columnDiv.draggable = true;
+                columnDiv.ondragstart = (e) => drag(e, column);
+                columnDiv.innerHTML = `
+                    <i class="fas fa-grip-vertical me-2"></i>${column}
+                `;
+                availableContainer.appendChild(columnDiv);
+            });
+        }
+
+        // Populate column visibility
+        function populateColumnVisibility(params) {
+            const displayedContainer = document.getElementById('displayedColumns');
+            const hiddenContainer = document.getElementById('hiddenColumns');
+            
+            displayedContainer.innerHTML = '';
+            hiddenContainer.innerHTML = '';
+
+            // Add displayed columns
+            if (params.display_columns && params.display_columns.length > 0) {
+                params.display_columns.forEach(column => {
+                    addColumnToContainer(displayedContainer, column, 'displayed');
+                });
+            }
+
+            // Add hidden columns
+            if (params.hidden_columns && params.hidden_columns.length > 0) {
+                params.hidden_columns.forEach(column => {
+                    addColumnToContainer(hiddenContainer, column, 'hidden');
+                });
+            }
+        }
+
+        // Add column to container
+        function addColumnToContainer(container, column, type) {
+            // Check if column already exists in this container to prevent duplicates using data-column attribute
+            const existing = Array.from(container.children).some(child => {
+                const dataColumn = child.getAttribute('data-column');
+                return dataColumn === column;
+            });
+            
+            if (existing) {
+                console.log(`Column ${column} already exists in container, skipping`);
+                return;
+            }
+
+            const columnDiv = document.createElement('div');
+            columnDiv.className = `column-item column-${type}`;
+            columnDiv.draggable = true;
+            columnDiv.ondragstart = (e) => drag(e, column);
+            columnDiv.setAttribute('data-column', column); // Add data attribute for easier identification
+            columnDiv.innerHTML = `
+                <i class="fas fa-grip-vertical me-2"></i>${column}
+                <button class="btn btn-sm btn-outline-secondary float-end" onclick="removeFromContainer(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(columnDiv);
+            
+            // Automatically update JSON preview and column headers when column is added
+            updateJsonPreview();
+            
+            // Add to column headers if not already present
+            if (type === 'displayed' && !document.querySelector(`input[data-column="${column}"]`)) {
+                addColumnHeader(column);
+            }
+        }
+
+        // Drag and drop functions
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.target.classList.add('drag-over');
+        }
+
+        function drag(ev, column) {
+            ev.dataTransfer.setData("text", column);
+        }
+
+        function drop(ev, targetType) {
+            ev.preventDefault();
+            ev.target.classList.remove('drag-over');
+            
+            const column = ev.dataTransfer.getData("text");
+            const container = document.getElementById(targetType === 'displayed' ? 'displayedColumns' : 'hiddenColumns');
+            
+            // Remove from other containers first
+            removeColumnFromAllContainers(column);
+            
+            // Add to target container
+            addColumnToContainer(container, column, targetType);
+            
+            updateJsonPreview();
+        }
+
+        // Remove column from all containers
+        function removeColumnFromAllContainers(column) {
+            const containers = ['displayedColumns', 'hiddenColumns'];
+            containers.forEach(containerId => {
+                const container = document.getElementById(containerId);
+                Array.from(container.children).forEach(child => {
+                    // Use data-column attribute or extract text properly
+                    const childColumn = child.getAttribute('data-column') || 
+                        (child.textContent || child.innerText).replace(/^\s*[\u2630\u2631]?\s*/, '').replace(/\s*×?\s*$/, '').trim();
+                    if (childColumn === column) {
+                        child.remove();
+                    }
+                });
+            });
+        }
+
+        // Add column header input field
+        function addColumnHeader(column) {
+            const container = document.getElementById('columnHeadersContainer');
+            
+            // Check if header already exists
+            if (document.querySelector(`input[data-column="${column}"]`)) {
+                return;
+            }
+            
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'row mb-2';
+            headerDiv.innerHTML = `
+                <div class="col-md-4">
+                    <label class="form-label">${column}</label>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control column-header" 
+                           data-column="${column}" value="${column.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}"
+                           oninput="updateJsonPreview()">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeColumnHeader('${column}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(headerDiv);
+        }
+
+        // Show all sections
+        function showAllSections() {
+            document.getElementById('basicInfoSection').style.display = 'block';
+            document.getElementById('parametersSection').style.display = 'block';
+            document.getElementById('columnsSection').style.display = 'block';
+            document.getElementById('jsonSection').style.display = 'block';
+        }
+
+        // Update JSON preview
+        function updateJsonPreview() {
+            const config = buildConfiguration();
+            document.getElementById('jsonPreview').value = JSON.stringify(config, null, 2);
+        }
+
+        // Build configuration object
+        function buildConfiguration() {
+            console.log('Building configuration...');
+            
+            // CRITICAL FIX: Always preserve existing parameters properly
+            let parameters = [];
+            if (currentReport && currentReport.rpt_params) {
+                // Parse the rpt_params if it's a string, or use directly if it's an object
+                let parsedParams = currentReport.rpt_params;
+                if (typeof parsedParams === 'string') {
+                    try {
+                        parsedParams = JSON.parse(parsedParams);
+                    } catch (e) {
+                        console.error('Error parsing currentReport.rpt_params:', e);
+                        parsedParams = {};
+                    }
+                }
+                parameters = parsedParams.parameters || [];
+            }
+            console.log('Preserved parameters:', parameters);
+            
+            // Get column headers from form inputs
+            const columnHeaders = {};
+            document.querySelectorAll('.column-header').forEach(input => {
+                const column = input.dataset.column;
+                const value = input.value;
+                if (column && value) {
+                    columnHeaders[column] = value;
+                }
+            });
+            console.log('Column headers from form:', columnHeaders);
+
+            // FIXED: Extract column names using data-column attribute (much more reliable)
+            const displayColumns = Array.from(document.getElementById('displayedColumns').children)
+                .map(child => {
+                    // Use data-column attribute if available, fallback to text parsing
+                    const dataColumn = child.getAttribute('data-column');
+                    if (dataColumn) {
+                        return dataColumn;
+                    }
+                    // Fallback: extract from text content (improved parsing)
+                    const text = child.textContent || child.innerText;
+                    // Remove drag handles (including Font Awesome icons), and remove buttons (×, X, etc)
+                    return text.replace(/^\s*[\u2630\u2631⋮≡☰\uE133\uE7E9]?\s*/, '').replace(/\s*[×✖✕Xx]?\s*$/, '').trim();
+                })
+                .filter(name => name && name !== '' && !name.includes('Drag columns here'));
+            
+            const hiddenColumns = Array.from(document.getElementById('hiddenColumns').children)
+                .map(child => {
+                    // Use data-column attribute if available, fallback to text parsing
+                    const dataColumn = child.getAttribute('data-column');
+                    if (dataColumn) {
+                        return dataColumn;
+                    }
+                    // Fallback: extract from text content (improved parsing)
+                    const text = child.textContent || child.innerText;
+                    // Remove drag handles (including Font Awesome icons), and remove buttons (×, X, etc)
+                    return text.replace(/^\s*[\u2630\u2631⋮≡☰\uE133\uE7E9]?\s*/, '').replace(/\s*[×✖✕Xx]?\s*$/, '').trim();
+                })
+                .filter(name => name && name !== '' && !name.includes('Drag columns here'));
+            
+            console.log('Display columns:', displayColumns);
+            console.log('Hidden columns:', hiddenColumns);
+
+            // Preserve existing ui_config and global_variables
+            let ui_config = {
+                date_format: "DD/MM/YYYY",
+                theme: "bootstrap"
+            };
+            let global_variables = {
+                comp_code: {
+                    forms6i_mapping: ":GLOBAL.M_COMP_CODE",
+                    web_mapping: "session[comp_code]"
+                },
+                user_id: {
+                    forms6i_mapping: ":GLOBAL.M_USER_ID",
+                    web_mapping: "session[user_id]"
+                }
+            };
+
+            if (currentReport && currentReport.rpt_params) {
+                let parsedParams = currentReport.rpt_params;
+                if (typeof parsedParams === 'string') {
+                    try {
+                        parsedParams = JSON.parse(parsedParams);
+                    } catch (e) {
+                        console.error('Error parsing rpt_params for ui_config:', e);
+                        parsedParams = {};
+                    }
+                }
+                if (parsedParams.ui_config) {
+                    ui_config = parsedParams.ui_config;
+                }
+                if (parsedParams.global_variables) {
+                    global_variables = parsedParams.global_variables;
+                }
+            }
+
+            const config = {
+                parameters: parameters,
+                display_columns: displayColumns,
+                column_headers: columnHeaders,
+                hidden_columns: hiddenColumns,
+                ui_config: ui_config,
+                global_variables: global_variables
+            };
+            
+            console.log('Final configuration built:', config);
+            return config;
+        }
+
+        // Save configuration
+        async function saveConfiguration() {
+            const reportId = document.getElementById('reportId').value.trim().toUpperCase();
+            const mode = document.querySelector('input[name="operationMode"]:checked').value;
+            
+            const reportData = {
+                rpt_id: reportId,
+                rpt_name: document.getElementById('reportName').value,
+                rpt_desc: document.getElementById('reportDesc').value,
+                rpt_type: document.getElementById('reportType').value,
+                rpt_source: document.getElementById('reportSource').value,
+                rpt_output_formats: document.getElementById('outputFormats').value,
+                rpt_category: document.getElementById('category').value,
+                rpt_active_flag: document.getElementById('activeFlag').checked ? 'Y' : 'N',
+                rpt_params: buildConfiguration()
+            };
+
+            try {
+                const response = await fetch(`/reports/admin/config/${reportId}`, {
+                    method: mode === 'insert' ? 'POST' : 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(reportData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess(`Report ${mode === 'insert' ? 'created' : 'updated'} successfully!`);
+                } else {
+                    showError('Error saving report: ' + result.error);
+                }
+            } catch (error) {
+                showError('Error saving report: ' + error.message);
+            }
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('reportId').value = '';
+            document.querySelectorAll('.config-section').forEach(section => {
+                if (section.id !== 'basicInfoSection') {
+                    section.style.display = 'none';
+                }
+            });
+            document.getElementById('deleteBtn').disabled = true;
+            currentReport = null;
+            currentColumns = [];
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners for real-time updates
+            document.addEventListener('input', updateJsonPreview);
+            document.addEventListener('change', updateJsonPreview);
+        });
+
+        // Additional functions for parameter management, etc. would go here...
+        function addParameter() {
+            editingParameterIndex = -1;
+            document.getElementById('parameterForm').reset();
+            new bootstrap.Modal(document.getElementById('parameterModal')).show();
+        }
+
+        function createNewReport() {
+            document.getElementById('modeInsert').checked = true;
+            resetForm();
+            showAllSections();
+        }
+
+        // Remove item from container (called by × button)
+        function removeFromContainer(button) {
+            const columnDiv = button.parentElement;
+            const column = columnDiv.getAttribute('data-column') || 
+                (columnDiv.textContent || columnDiv.innerText).replace(/^\s*[\u2630\u2631]?\s*/, '').replace(/\s*×?\s*$/, '').trim();
+            
+            console.log('Removing column from container:', column);
+            
+            // Remove the column div
+            columnDiv.remove();
+            
+            // Update JSON preview
+            updateJsonPreview();
+            
+            // If it was a displayed column, also remove its header configuration
+            if (columnDiv.classList.contains('column-displayed')) {
+                removeColumnHeader(column);
+            }
+        }
+
+        // Utility functions
+        function copyJson() { 
+            navigator.clipboard.writeText(document.getElementById('jsonPreview').value)
+                .then(() => showInfo('JSON copied to clipboard!'))
+                .catch(err => showError('Failed to copy JSON: ' + err.message));
+        }
+        
+        function editJson() { 
+            const textarea = document.getElementById('jsonPreview');
+            textarea.readOnly = !textarea.readOnly;
+            if (textarea.readOnly) {
+                textarea.style.backgroundColor = '#f8f9fa';
+                showInfo('JSON preview is now read-only');
+            } else {
+                textarea.style.backgroundColor = '#fff';
+                showInfo('JSON preview is now editable - be careful!');
+            }
+        }
+
+        // Placeholder functions for remaining functionality
+        function deleteReport() { 
+            if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+                // Implementation needed - call DELETE endpoint
+                showError('Delete functionality not yet implemented');
+            }
+        }
+        
+        function autoGenerateParams() { 
+            showInfo('Auto-generate parameters functionality not yet implemented');
+        }
+        
+        function editParameter(index) { 
+            showInfo('Edit parameter functionality not yet implemented');
+        }
+        
+        function deleteParameter(index) { 
+            showInfo('Delete parameter functionality not yet implemented');
+        }
+        
+        function saveParameter() { 
+            showInfo('Save parameter functionality not yet implemented');
+        }
+
+        // ========================================
+        // ENHANCED ADMIN INTERFACE FUNCTIONALITY
+        // ========================================
+
+        // Parameter drag and drop handlers
+        let draggedParameterElement = null;
+
+        function handleParameterDragStart(e) {
+            draggedParameterElement = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleParameterDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+            return false;
+        }
+
+        function handleParameterDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedParameterElement !== this) {
+                const container = document.getElementById('parametersContainer');
+                const allItems = Array.from(container.children);
+                const draggedIndex = allItems.indexOf(draggedParameterElement);
+                const targetIndex = allItems.indexOf(this);
+                
+                if (draggedIndex < targetIndex) {
+                    this.parentNode.insertBefore(draggedParameterElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedParameterElement, this);
+                }
+                
+                reorderParameters();
+            }
+            
+            this.classList.remove('drag-over');
+            return false;
+        }
+
+        function handleParameterDragEnd(e) {
+            this.style.opacity = '';
+            this.classList.remove('drag-over');
+            
+            const allItems = document.querySelectorAll('.parameter-item');
+            allItems.forEach(item => item.classList.remove('drag-over'));
+        }
+
+        // Reorder parameters based on DOM order
+        function reorderParameters() {
+            const container = document.getElementById('parametersContainer');
+            const items = Array.from(container.children);
+            
+            const newParameters = [];
+            items.forEach((item, newIndex) => {
+                const oldIndex = parseInt(item.getAttribute('data-param-index'));
+                const param = currentReport.rpt_params.parameters[oldIndex];
+                if (param) {
+                    newParameters.push(param);
+                }
+            });
+            
+            currentReport.rpt_params.parameters = newParameters;
+            populateParameters(newParameters);
+            updateJsonPreview();
+        }
+
+        // Toggle parameter visibility
+        function toggleParameterVisibility(index, isVisible) {
+            if (currentReport && currentReport.rpt_params && currentReport.rpt_params.parameters) {
+                // Update the parameter object
+                currentReport.rpt_params.parameters[index].visible = isVisible;
+                
+                // Visual feedback
+                const paramDiv = document.querySelector(`[data-param-index="${index}"]`);
+                const paramLabel = paramDiv.querySelector(`label[for="paramVisible${index}"]`);
+                
+                if (paramDiv) {
+                    if (isVisible) {
+                        paramDiv.classList.remove('parameter-hidden');
+                        paramDiv.classList.add('parameter-visible');
+                        paramDiv.style.opacity = '1';
+                        if (paramLabel) {
+                            paramLabel.innerHTML = '<small class="text-success"><i class="fas fa-eye me-1"></i>Show</small>';
+                        }
+                        showSuccess(`Parameter "${currentReport.rpt_params.parameters[index].name}" will be visible in forms`);
+                    } else {
+                        paramDiv.classList.add('parameter-hidden');
+                        paramDiv.classList.remove('parameter-visible');
+                        paramDiv.style.opacity = '0.7';
+                        if (paramLabel) {
+                            paramLabel.innerHTML = '<small class="text-warning"><i class="fas fa-eye-slash me-1"></i>Hidden</small>';
+                        }
+                        showInfo(`Parameter "${currentReport.rpt_params.parameters[index].name}" will be hidden (default value will be used)`);
+                    }
+                }
+                
+                updateJsonPreview();
+                
+                console.log(`Parameter ${currentReport.rpt_params.parameters[index].field} visibility set to: ${isVisible}`);
+            }
+        }
+
+        // Inline parameter editing functions
+        function editParameterInline(index) {
+            const editForm = document.getElementById(`paramEditForm${index}`);
+            if (editForm) {
+                editForm.style.display = editForm.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function saveParameterInline(index) {
+            const param = currentReport.rpt_params.parameters[index];
+            if (param) {
+                param.name = document.getElementById(`paramName${index}`).value;
+                param.field = document.getElementById(`paramField${index}`).value;
+                param.type = document.getElementById(`paramType${index}`).value;
+                param.default = document.getElementById(`paramDefault${index}`).value;
+                param.required = document.getElementById(`paramRequired${index}`).checked;
+                
+                document.getElementById(`paramEditForm${index}`).style.display = 'none';
+                populateParameters(currentReport.rpt_params.parameters);
+                updateJsonPreview();
+                showSuccess('Parameter updated successfully');
+            }
+        }
+
+        function cancelParameterEdit(index) {
+            document.getElementById(`paramEditForm${index}`).style.display = 'none';
+        }
+
+        // Enhanced populateColumns that uses available_columns from config
+        function populateColumnsEnhanced() {
+            const availableContainer = document.getElementById('availableColumns');
+            availableContainer.innerHTML = '';
+
+            let columnsToShow = [];
+            if (currentReport && currentReport.rpt_params && currentReport.rpt_params.available_columns) {
+                columnsToShow = currentReport.rpt_params.available_columns;
+            }
+
+            if (columnsToShow && columnsToShow.length > 0) {
+                columnsToShow.forEach(column => {
+                    const columnDiv = document.createElement('div');
+                    columnDiv.className = 'column-item';
+                    columnDiv.draggable = true;
+                    columnDiv.ondragstart = (e) => drag(e, column);
+                    columnDiv.innerHTML = `
+                        <i class="fas fa-grip-vertical me-2"></i>${column}
+                    `;
+                    availableContainer.appendChild(columnDiv);
+                });
+            } else {
+                availableContainer.innerHTML = '<p class="text-muted">Run SQL update to populate available columns for this report</p>';
+            }
+        }
+
+        // Override original populateColumns function 
+        const originalPopulateColumns = window.populateColumns;
+        window.populateColumns = function(columns) {
+            populateColumnsEnhanced();
+        };
+
+        // =============================================================================
+        // ENHANCED COLUMN REORDERING FUNCTIONALITY
+        // =============================================================================
+
+        // Enhanced Column Drag and Drop with Better Positioning
+        function enhanceColumnReordering() {
+            const displayedContainer = document.getElementById('displayedColumns');
+            const hiddenContainer = document.getElementById('hiddenColumns');
+            
+            if (displayedContainer) {
+                // Make the displayed container droppable with enhanced handlers
+                displayedContainer.addEventListener('dragover', allowColumnDrop);
+                displayedContainer.addEventListener('drop', handleColumnDropBetter);
+                displayedContainer.addEventListener('dragleave', function(e) {
+                    e.currentTarget.classList.remove('drag-over');
+                });
+            }
+            
+            if (hiddenContainer) {
+                // Make the hidden container also droppable with enhanced handlers
+                hiddenContainer.addEventListener('dragover', allowColumnDrop);
+                hiddenContainer.addEventListener('drop', handleColumnDropBetter);
+                hiddenContainer.addEventListener('dragleave', function(e) {
+                    e.currentTarget.classList.remove('drag-over');
+                });
+            }
+        }
+
+        // Better column item dragging
+        function makeColumnItemDraggableBetter(columnItem, addReorderButtons = true) {
+            columnItem.draggable = true;
+            columnItem.addEventListener('dragstart', handleColumnDragStartBetter);
+            columnItem.addEventListener('dragend', handleColumnDragEndBetter);
+            columnItem.addEventListener('dragover', handleColumnDragOverBetter);
+            columnItem.addEventListener('drop', handleColumnDropOnItemBetter);
+            
+            // Add visual reordering buttons only if requested and not already present
+            if (addReorderButtons && !columnItem.querySelector('.reorder-buttons')) {
+                const reorderButtons = document.createElement('div');
+                reorderButtons.className = 'reorder-buttons float-end me-2';
+                reorderButtons.innerHTML = `
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="moveColumnUpBetter(this)" title="Move Up">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="moveColumnDownBetter(this)" title="Move Down">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                `;
+                
+                // Insert before existing buttons
+                const existingButton = columnItem.querySelector('button');
+                if (existingButton) {
+                    existingButton.parentNode.insertBefore(reorderButtons, existingButton);
+                }
+            }
+        }
+
+        // Enhanced drag handlers
+        let draggedColumnItem = null;
+
+        function handleColumnDragStartBetter(e) {
+            draggedColumnItem = this;
+            this.style.opacity = '0.5';
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            
+            // CRITICAL FIX: Set drag data for basic drop() function compatibility
+            const column = this.getAttribute('data-column') || 
+                          this.textContent.replace(/^\s*[\u2630\u2631]?\s*/, '').replace(/\s*[×↑↓].*$/, '').trim();
+            e.dataTransfer.setData("text", column);
+        }
+
+        function handleColumnDragEndBetter(e) {
+            this.style.opacity = '';
+            this.classList.remove('dragging');
+            
+            // Remove all drag indicators
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            
+            draggedColumnItem = null;
+        }
+
+        function handleColumnDragOverBetter(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            
+            if (draggedColumnItem && this !== draggedColumnItem) {
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+            }
+            
+            return false;
+        }
+
+        function handleColumnDropOnItemBetter(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedColumnItem && this !== draggedColumnItem) {
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                const insertBefore = e.clientY < midpoint;
+                
+                const container = this.parentNode;
+                
+                if (insertBefore) {
+                    container.insertBefore(draggedColumnItem, this);
+                } else {
+                    container.insertBefore(draggedColumnItem, this.nextSibling);
+                }
+                
+                // Update the configuration
+                updateDisplayColumnOrderBetter();
+            }
+            
+            this.classList.remove('drag-over');
+            return false;
+        }
+
+        function allowColumnDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+            return false;
+        }
+
+        function handleColumnDropBetter(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (draggedColumnItem) {
+                // Enhanced system: draggedColumnItem is set
+                const container = e.currentTarget;
+                container.appendChild(draggedColumnItem);
+                updateDisplayColumnOrderBetter();
+            } else {
+                // Basic system: use dataTransfer data
+                const column = e.dataTransfer.getData("text");
+                if (column) {
+                    const container = e.currentTarget;
+                    const targetType = container.id === 'displayedColumns' ? 'displayed' : 'hidden';
+                    
+                    // Remove from other containers first
+                    removeColumnFromAllContainers(column);
+                    
+                    // Add to target container
+                    addColumnToContainer(container, column, targetType);
+                    
+                    updateJsonPreview();
+                }
+            }
+            
+            return false;
+        }
+
+        // Better column ordering update
+        function updateDisplayColumnOrderBetter() {
+            const container = document.getElementById('displayedColumns');
+            const columns = Array.from(container.children).map(item => {
+                return item.getAttribute('data-column') || 
+                       item.textContent.replace(/^\s*[\u2630\u2631\u25B2\u25BC]?\s*/, '').replace(/\s*[×↑↓].*$/, '').trim();
+            });
+            
+            console.log('Updated column order:', columns);
+            
+            if (currentReport && currentReport.rpt_params) {
+                currentReport.rpt_params.display_columns = columns;
+                updateJsonPreview();
+                showSuccess('Column order updated');
+            }
+        }
+
+        // Better move functions
+        function moveColumnUpBetter(button) {
+            const columnItem = button.closest('.column-item');
+            const prevItem = columnItem.previousElementSibling;
+            if (prevItem) {
+                columnItem.parentNode.insertBefore(columnItem, prevItem);
+                updateDisplayColumnOrderBetter();
+            }
+        }
+
+        function moveColumnDownBetter(button) {
+            const columnItem = button.closest('.column-item');
+            const nextItem = columnItem.nextElementSibling;
+            if (nextItem) {
+                columnItem.parentNode.insertBefore(nextItem, columnItem);
+                updateDisplayColumnOrderBetter();
+            }
+        }
+
+        // Enhanced addColumnToContainer with better reordering
+        function addColumnToContainerBetter(container, column, type) {
+            // Check if column already exists using data-column attribute
+            const existing = Array.from(container.children).some(child => {
+                const dataColumn = child.getAttribute('data-column');
+                return dataColumn === column;
+            });
+            
+            if (existing) {
+                console.log(`Column ${column} already exists in container, skipping`);
+                return;
+            }
+
+            const columnDiv = document.createElement('div');
+            columnDiv.className = `column-item column-${type}`;
+            columnDiv.setAttribute('data-column', column);
+            
+            // CRITICAL FIX: Make ALL column items draggable, not just displayed ones
+            columnDiv.draggable = true;
+            columnDiv.ondragstart = (e) => drag(e, column);
+            
+            columnDiv.innerHTML = `
+                <i class="fas fa-grip-vertical me-2"></i>${column}
+                <button class="btn btn-sm btn-outline-secondary float-end" onclick="removeFromContainer(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(columnDiv);
+            
+            // Make ALL columns draggable with enhanced behavior for cross-container moves
+            // Only add reordering buttons for displayed columns (for within-container reordering)
+            const needsReorderButtons = (type === 'displayed');
+            makeColumnItemDraggableBetter(columnDiv, needsReorderButtons);
+            
+            updateJsonPreview();
+            
+            if (type === 'displayed' && !document.querySelector(`input[data-column="${column}"]`)) {
+                addColumnHeader(column);
+            }
+        }
+
+        // Override the original addColumnToContainer
+        window.addColumnToContainer = addColumnToContainerBetter;
+
+        // Initialize enhanced column reordering
+        setTimeout(() => {
+            enhanceColumnReordering();
+        }, 1000);
+
+        // Add CSS for enhanced functionality
+        const enhancedCSS = `
+            .parameter-item {
+                transition: opacity 0.3s ease;
+                cursor: move;
+            }
+            
+            .parameter-hidden {
+                opacity: 0.7;
+                background-color: #fff8e1;
+                border-left: 4px solid #ff9800;
+                position: relative;
+                box-shadow: 0 2px 4px rgba(255, 152, 0, 0.1);
+            }
+            
+            .parameter-hidden::after {
+                content: "🚫 HIDDEN - Uses default value in reports";
+                position: absolute;
+                top: 8px;
+                right: 15px;
+                background: linear-gradient(135deg, #ff9800, #f57c00);
+                color: #fff;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 9px;
+                font-weight: bold;
+                text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .parameter-visible {
+                border-left: 4px solid #4caf50;
+                background-color: #f1f8e9;
+                position: relative;
+                box-shadow: 0 2px 4px rgba(76, 175, 80, 0.1);
+            }
+            
+            .parameter-visible::after {
+                content: "✓ VISIBLE - Shows in parameter form";
+                position: absolute;
+                top: 8px;
+                right: 15px;
+                background: linear-gradient(135deg, #4caf50, #388e3c);
+                color: #fff;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 9px;
+                font-weight: bold;
+                text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .drag-handle {
+                cursor: move;
+                text-align: center;
+            }
+            
+            .drag-over {
+                background-color: #e9ecef;
+                border: 2px dashed #007bff;
+            }
+            
+            .parameter-edit-form {
+                border-top: 1px solid #dee2e6;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            
+            .form-check-input:checked {
+                background-color: #28a745;
+                border-color: #28a745;
+            }
+            
+            .column-item {
+                position: relative;
+                transition: all 0.3s ease;
+                border: 1px solid #dee2e6;
+                margin: 2px 0;
+                padding: 8px;
+                border-radius: 4px;
+            }
+            
+            .column-item.dragging {
+                opacity: 0.5;
+                transform: scale(0.95);
+            }
+            
+            .column-item.drag-over {
+                background-color: #e7f3ff;
+                border-color: #007bff;
+            }
+            
+            .column-item:hover .reorder-buttons {
+                opacity: 1;
+            }
+            
+            .reorder-buttons {
+                opacity: 0.6;
+                transition: opacity 0.3s ease;
+            }
+            
+            .available-column {
+                cursor: grab;
+            }
+            
+            .available-column:hover {
+                background-color: #f8f9fa;
+            }
+        `;
+
+        // Add enhanced CSS to page
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = enhancedCSS;
+        document.head.appendChild(styleSheet);
+    </script>
+</body>
+</html>

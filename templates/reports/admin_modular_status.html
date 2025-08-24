@@ -1,0 +1,374 @@
+<!-- File: templates/reports/admin_modular_status.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular Reports Administration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-traditional { color: #6c757d; }
+        .status-modular-ok { color: #28a745; }
+        .status-modular-missing { color: #dc3545; }
+        .report-type-badge {
+            font-size: 0.75em;
+            padding: 0.25em 0.5em;
+        }
+        .btn-migrate {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+            color: white;
+        }
+        .btn-migrate:hover {
+            background-color: #138496;
+            border-color: #117a8b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-cogs me-2"></i>Modular Reports Administration</h2>
+                    <div>
+                        <a href="{{ url_for('reports.debug_test') }}" class="btn btn-outline-info me-2">
+                            <i class="fas fa-bug me-1"></i>Debug Test
+                        </a>
+                        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ reports|length }}</h5>
+                                <p class="card-text">Total Reports</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-success">
+                                    {% set modular_ok = reports|selectattr('status', 'equalto', 'Modular File OK')|list|length %}
+                                    {{ modular_ok }}
+                                </h5>
+                                <p class="card-text">Modular (OK)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-danger">
+                                    {% set missing_files = reports|selectattr('status', 'equalto', 'Missing File')|list|length %}
+                                    {{ missing_files }}
+                                </h5>
+                                <p class="card-text">Missing Files</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-secondary">
+                                    {% set traditional = reports|selectattr('status', 'equalto', 'Traditional SQL')|list|length %}
+                                    {{ traditional }}
+                                </h5>
+                                <p class="card-text">Traditional</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="mb-0">All Reports Status</h5>
+                            </div>
+                            <div class="col-auto">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search reports...">
+                                    <button class="btn btn-outline-secondary" type="button">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="reportsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Report ID</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Source</th>
+                                        <th>Status</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in reports %}
+                                    <tr>
+                                        <td>
+                                            <code>{{ report.report_id }}</code>
+                                        </td>
+                                        <td>{{ report.name }}</td>
+                                        <td>
+                                            <span class="badge report-type-badge 
+                                                {% if report.type == 'SQL' %}bg-success
+                                                {% elif report.type == 'CLASS' %}bg-primary
+                                                {% elif report.type == 'TEMPLATE' %}bg-warning
+                                                {% elif report.type == 'PROCEDURE' %}bg-info
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ report.type }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="font-monospace">{{ report.source }}</small>
+                                            {% if report.file_path %}
+                                                <br><small class="text-muted">{{ report.file_path.split('/')[-1] if '/' in report.file_path else report.file_path }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if report.status == 'Modular File OK' %}
+                                                <i class="fas fa-check-circle status-modular-ok me-1"></i>
+                                                <span class="status-modular-ok">{{ report.status }}</span>
+                                            {% elif report.status == 'Missing File' %}
+                                                <i class="fas fa-exclamation-triangle status-modular-missing me-1"></i>
+                                                <span class="status-modular-missing">{{ report.status }}</span>
+                                            {% else %}
+                                                <i class="fas fa-database status-traditional me-1"></i>
+                                                <span class="status-traditional">{{ report.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if report.updated_date %}
+                                                {{ report.updated_date.strftime('%d/%m/%Y') if report.updated_date.strftime else report.updated_date }}
+                                            {% else %}
+                                                {{ report.created_date.strftime('%d/%m/%Y') if report.created_date and report.created_date.strftime else (report.created_date or 'N/A') }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <!-- Test Report Button -->
+                                                <a href="{{ url_for('reports.report_parameter_form', form_id=report.report_id, menu_id='ADMIN') }}" 
+                                                   class="btn btn-outline-primary" 
+                                                   title="Test Report">
+                                                    <i class="fas fa-play"></i>
+                                                </a>
+                                                
+                                                <!-- Debug Button -->
+                                                <a href="{{ url_for('reports.debug_modular_report', report_id=report.report_id) }}" 
+                                                   class="btn btn-outline-warning" 
+                                                   title="Debug Configuration">
+                                                    <i class="fas fa-bug"></i>
+                                                </a>
+                                                
+                                                <!-- Migrate Button - Only for Traditional Reports -->
+                                                {% if report.status == 'Traditional SQL' %}
+                                                    <a href="{{ url_for('reports.migrate_report_to_modular', report_id=report.report_id) }}" 
+                                                       class="btn btn-migrate" 
+                                                       title="Migrate to Modular"
+                                                       onclick="return confirm('Migrate {{ report.report_id }} to modular approach? This will:\n\n1. Extract SQL to external file\n2. Update database reference\n3. Enable modular features\n\nContinue?')">
+                                                        <i class="fas fa-exchange-alt"></i>
+                                                    </a>
+                                                {% endif %}
+                                                
+                                                <!-- View File Button - Only for Modular Reports with Files -->
+                                                {% if report.file_exists %}
+                                                    <button class="btn btn-outline-info" 
+                                                            title="View File Content"
+                                                            onclick="viewFileContent('{{ report.report_id }}', '{{ report.file_path }}')">
+                                                        <i class="fas fa-file-code"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Migration Guide -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Migration Guide</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <h6 class="text-success">✅ Modular File OK</h6>
+                                    <p class="small mb-2">Reports using external files and working correctly.</p>
+                                </div>
+                                <div class="mb-3">
+                                    <h6 class="text-danger">⚠️ Missing File</h6>
+                                    <p class="small mb-2">Reports configured as modular but missing external files.</p>
+                                </div>
+                                <div class="mb-0">
+                                    <h6 class="text-secondary">📝 Traditional SQL</h6>
+                                    <p class="small mb-0">Reports with SQL stored in database. Click <button class="btn btn-migrate btn-sm"><i class="fas fa-exchange-alt"></i></button> to migrate.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Directory Structure</h6>
+                            </div>
+                            <div class="card-body">
+                                <pre class="mb-0 small">reports/
+├── sql/           ({{ reports|selectattr('type', 'equalto', 'SQL')|selectattr('is_modular', 'equalto', true)|list|length }} SQL reports)
+├── classes/       ({{ reports|selectattr('type', 'equalto', 'CLASS')|list|length }} Class reports)
+├── templates/     ({{ reports|selectattr('type', 'equalto', 'TEMPLATE')|list|length }} Template reports)
+└── procedures/    ({{ reports|selectattr('type', 'equalto', 'PROCEDURE')|list|length }} Procedure reports)
+
+Traditional: {{ reports|selectattr('is_modular', 'equalto', false)|list|length }} reports still in database</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Quick Actions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success" onclick="migrateAllTraditional()">
+                                        <i class="fas fa-magic me-1"></i>Migrate All Traditional
+                                    </button>
+                                    <small class="text-muted">Convert all traditional reports to modular approach</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-info" onclick="createDirectories()">
+                                        <i class="fas fa-folder-plus me-1"></i>Create Directories
+                                    </button>
+                                    <small class="text-muted">Create reports directory structure</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('reports.debug_test') }}" class="btn btn-warning">
+                                        <i class="fas fa-vial me-1"></i>Test System
+                                    </a>
+                                    <small class="text-muted">Run system diagnostics</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Content Modal -->
+    <div class="modal fade" id="fileContentModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">File Content</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="fileContentDisplay" class="bg-light p-3" style="max-height: 500px; overflow-y: auto;"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchValue = this.value.toLowerCase();
+            const table = document.getElementById('reportsTable');
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().includes(searchValue)) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                row.style.display = found ? '' : 'none';
+            }
+        });
+
+        // View file content function
+        function viewFileContent(reportId, filePath) {
+            // For now, show a placeholder
+            document.getElementById('fileContentDisplay').textContent = 
+                `File: ${filePath}\n\nContent would be loaded here...\n\nTo implement: Add endpoint to read file content for ${reportId}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('fileContentModal'));
+            modal.show();
+        }
+
+        // Migrate all traditional reports
+        function migrateAllTraditional() {
+            if (confirm('Migrate ALL traditional reports to modular approach?\n\nThis will:\n1. Extract SQL from database to external files\n2. Update all database references\n3. Enable modular features for all reports\n\nThis operation cannot be easily undone. Continue?')) {
+                // Implement batch migration
+                alert('Batch migration feature coming soon!\n\nFor now, please migrate reports individually using the migrate button.');
+            }
+        }
+
+        // Create directories
+        function createDirectories() {
+            alert('Directory creation feature coming soon!\n\nFor now, please create directories manually:\n\nmkdir -p reports/{sql,classes,templates,procedures}');
+        }
+
+        // Show success message if present
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% if category == 'success' %}
+                        setTimeout(function() {
+                            alert('✅ {{ message }}');
+                        }, 500);
+                    {% elif category == 'danger' %}
+                        setTimeout(function() {
+                            alert('❌ {{ message }}');
+                        }, 500);
+                    {% elif category == 'info' %}
+                        setTimeout(function() {
+                            alert('ℹ️ {{ message }}');
+                        }, 500);
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </script>
+</body>
+</html>

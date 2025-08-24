@@ -1,0 +1,1158 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - ERP System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Professional Sidebar Styling */
+    #sidebarMenu {
+        background: linear-gradient(180deg, #f0f8ff 0%, #e6f3ff 100%);
+        border-right: 2px solid rgba(59, 130, 246, 0.2);
+        box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+        backdrop-filter: blur(20px);
+        position: relative;
+    }
+    
+    #sidebarMenu::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 179, 237, 0.03) 100%);
+        pointer-events: none;
+    }
+    
+    .sidebar-header {
+        background: var(--primary-gradient);
+        border: none;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .sidebar-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+        0%, 100% { transform: rotate(0deg); opacity: 0.5; }
+        50% { transform: rotate(180deg); opacity: 0.8; }
+    }
+    
+    .sidebar-header h6 {
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Professional Menu Items */
+    .parent-menu-container {
+        margin-bottom: 0.5rem;
+    }
+    
+    .menu-parent {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(99, 179, 237, 0.08) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+    
+    .menu-parent::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+        transition: left 0.6s ease;
+    }
+    
+    .menu-parent:hover::before {
+        left: 100%;
+    }
+    
+    .menu-parent:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 179, 237, 0.15) 100%);
+        transform: translateX(8px) translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .functional-menu-container {
+        margin-bottom: 0.4rem;
+    }
+    
+    .menu-leaf {
+        background: linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.9) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.08);
+        border-radius: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.05);
+    }
+    
+    .menu-leaf::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .menu-leaf:hover {
+        transform: translateX(10px) translateY(-2px);
+        box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
+        background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Action type specific hover effects */
+    .menu-leaf:hover::after {
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .menu-leaf[data-action="R"]:hover::after {
+        background: linear-gradient(180deg, #198754 0%, #20c997 100%);
+    }
+    
+    .menu-leaf[data-action="F"]:hover::after {
+        background: linear-gradient(180deg, #0d6efd 0%, #6f42c1 100%);
+    }
+    
+    .menu-leaf[data-action="U"]:hover::after {
+        background: linear-gradient(180deg, #0dcaf0 0%, #20c997 100%);
+    }
+    
+    .menu-leaf[data-action="Q"]:hover::after {
+        background: linear-gradient(180deg, #6c757d 0%, #495057 100%);
+    }
+    
+    /* Professional Badges */
+    .badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 0.4em 0.7em;
+        border-radius: 15px;
+        letter-spacing: 0.3px;
+        position: relative;
+        overflow: hidden;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .bg-success {
+        background: linear-gradient(135deg, #198754 0%, #20c997 100%) !important;
+        box-shadow: 0 3px 12px rgba(25,135,84,0.3);
+    }
+    
+    .bg-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%) !important;
+        box-shadow: 0 3px 12px rgba(13,110,253,0.3);
+    }
+    
+    .bg-info {
+        background: linear-gradient(135deg, #0dcaf0 0%, #20c997 100%) !important;
+        box-shadow: 0 3px 12px rgba(13,202,240,0.3);
+    }
+    
+    .bg-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+        box-shadow: 0 3px 12px rgba(108,117,125,0.3);
+    }
+    
+    .bg-warning {
+        background: linear-gradient(135deg, #3b82f6 0%, #63b3ed 100%) !important;
+        box-shadow: 0 3px 12px rgba(59, 130, 246, 0.3);
+        color: #fff !important;
+    }
+    
+    .bg-dark {
+        background: linear-gradient(135deg, #212529 0%, #495057 100%) !important;
+        box-shadow: 0 3px 12px rgba(33,37,41,0.3);
+    }
+    
+    /* Main Content Area */
+    #mainContent {
+        background: linear-gradient(180deg, #f0f8ff 0%, #e6f3ff 100%);
+        backdrop-filter: blur(20px);
+        position: relative;
+    }
+    
+    #mainContent::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233b82f6' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+    
+    /* Professional Screen Content */
+    #screenContent .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(59, 130, 246, 0.08);
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
+        backdrop-filter: blur(20px);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    #screenContent .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6 0%, #63b3ed 100%);
+    }
+    
+    #screenContent .card-header {
+        background: linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(255,255,255,0.98) 100%);
+        border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        padding: 1rem 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    #screenContent .card-body {
+        padding: 1.5rem;
+        position: relative;
+        z-index: 1;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    
+    /* Professional Icons */
+    #screenContent .fa-3x, #screenContent .fa-4x {
+        filter: drop-shadow(0 8px 20px rgba(0,0,0,0.15));
+        transition: all 0.3s ease;
+    }
+    
+    #screenContent .fa-3x:hover, #screenContent .fa-4x:hover {
+        transform: scale(1.1) rotateY(15deg);
+        filter: drop-shadow(0 12px 25px rgba(0,0,0,0.2));
+    }
+    
+    /* Enhanced Button Styling for Screen Content */
+    #screenContent .btn-lg {
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 25px;
+        letter-spacing: 0.5px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    #screenContent .btn-lg::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+        transition: left 0.6s ease;
+    }
+    
+    #screenContent .btn-lg:hover::before {
+        left: 100%;
+    }
+    
+    #screenContent .btn-lg:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    
+    /* Toggle Icons Enhancement */
+    .toggle-icon {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+    
+    .fa-chevron-down {
+        transform: rotate(90deg);
+    }
+    
+    /* Loading Spinner Enhancement */
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(102, 126, 234, 0.1);
+        border-left: 5px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Selected Menu Item Styling */
+    .menu-leaf.selected {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+        transform: translateX(12px);
+        box-shadow: 0 10px 30px rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+    
+    .menu-leaf.selected::after {
+        background: linear-gradient(180deg, #22c55e 0%, #3b82f6 100%);
+        width: 4px;
+    }
+    
+    /* Enhanced Focus States */
+    .menu-parent:focus,
+    .menu-leaf:focus,
+    .btn:focus {
+        outline: 2px solid rgba(102,126,234,0.5);
+        outline-offset: 3px;
+        box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+    }
+    
+    /* Responsive Enhancements */
+    @media (max-width: 768px) {
+        .menu-parent, .menu-leaf {
+            margin-left: 0 !important;
+            transform: none !important;
+        }
+        
+        .menu-parent:hover, .menu-leaf:hover {
+            transform: translateY(-2px) !important;
+        }
+        
+        .sidebar-header {
+            padding: 1rem;
+        }
+        
+        #screenContent .card-header,
+        #screenContent .card-body {
+            padding: 1.5rem;
+        }
+        
+        #screenContent .btn-lg {
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+        }
+    }
+    
+    /* Advanced Hover Effects */
+    .menu-parent:hover .toggle-icon {
+        transform: scale(1.2);
+        color: #3b82f6 !important;
+    }
+    
+    .menu-leaf:hover .badge {
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    /* Smooth Transitions for Content */
+    #contentArea {
+        transition: all 0.3s ease;
+    }
+    
+    #screenContent {
+        animation: slideInUp 0.4s ease;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Enhanced Text Styling */
+    #screenContent h3, #screenContent h4 {
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        font-size: 1.25rem;
+        line-height: 1.4;
+        margin-bottom: 0.75rem;
+        text-align: center;
+    }
+    
+    #screenContent .lead {
+        font-weight: 400;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        text-align: center;
+        color: #6b7280;
+    }
+    
+    #screenContent .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 20px;
+        letter-spacing: 0.3px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
+        margin: 0.25rem;
+        min-width: 140px;
+    }
+    
+    #screenContent .fa-4x {
+        font-size: 2.5rem !important;
+        margin-bottom: 1rem;
+    }
+    
+    #screenContent .fa-3x {
+        font-size: 2rem !important;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Responsive Content Adjustments */
+    @media (max-width: 1200px) {
+        #screenContent .card-body {
+            padding: 1rem;
+            min-height: 280px;
+        }
+        
+        #screenContent h3, #screenContent h4 {
+            font-size: 1.1rem;
+        }
+        
+        #screenContent .btn-lg {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.85rem;
+        }
+        
+        #screenContent .fa-4x {
+            font-size: 2rem !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        #screenContent .card-body {
+            padding: 0.75rem;
+            min-height: 250px;
+        }
+        
+        #screenContent h3, #screenContent h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        #screenContent .lead {
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        #screenContent .btn-lg {
+            padding: 0.6rem 1rem;
+            font-size: 0.8rem;
+            display: block;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            min-width: auto;
+        }
+        
+        #screenContent .d-flex.gap-3 {
+            flex-direction: column;
+            gap: 0.5rem !important;
+        }
+        
+        #screenContent .fa-4x {
+            font-size: 1.75rem !important;
+            margin-bottom: 0.75rem;
+        }
+        
+        #screenContent .fa-3x {
+            font-size: 1.5rem !important;
+            margin-bottom: 0.5rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        #screenContent .card-body {
+            padding: 0.5rem;
+            min-height: 220px;
+        }
+        
+        #screenContent h3, #screenContent h4 {
+            font-size: 0.95rem;
+        }
+        
+        #screenContent .lead {
+            font-size: 0.8rem;
+        }
+        
+        #screenContent .btn-lg {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="h-100 w-100">
+    <div class="row g-0 h-100">
+        <!-- Left Sidebar (30% width) - Menu Navigation -->
+        <div class="col-3 h-100" id="sidebarMenu" style="overflow-y: auto;">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header border-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-sitemap"></i> Menu Navigation
+                    </h6>
+                    <button class="btn btn-sm btn-outline-light" onclick="toggleSidebar()" title="Toggle Sidebar">
+                        <i class="fas fa-chevron-left" id="sidebarToggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Menu Tree Navigation -->
+            <div class="p-3" id="menuTree">
+                {% if user_menus %}
+                    {% macro render_menu(menu, level=0) %}
+                        <div class="menu-item" data-search="{{ (menu.name or '').lower() }}" data-type="{{ menu.action_type }}" data-level="{{ level }}">
+                            {% if menu.action_type == 'M' or menu.children %}
+                                <!-- PARENT MENU -->
+                                <div class="parent-menu-container mb-1">
+                                    <div class="menu-parent p-3 rounded" 
+                                         style="margin-left: {{ level * 15 }}px; cursor: pointer;"
+                                         onclick="toggleMenuNode(this, '{{ menu.id }}')"
+                                         tabindex="0"
+                                         role="button"
+                                         aria-expanded="false">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-chevron-right me-2 toggle-icon text-primary" id="icon-{{ menu.id }}"></i>
+                                            <i class="fas fa-folder text-primary me-2"></i>
+                                            <strong class="flex-grow-1 text-dark" style="font-size: 13px;">{{ menu.name or 'Unnamed Menu' }}</strong>
+                                            <span class="badge bg-primary text-white">{{ menu.children|length }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Children Container (Initially Hidden) -->
+                                    <div class="menu-children d-none" id="children-{{ menu.id }}">
+                                        {% for child in menu.children %}
+                                            {{ render_menu(child, level + 1) }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <!-- FUNCTIONAL MENU ITEM - FIXED: Use processed_url -->
+                                <div class="functional-menu-container mb-1">
+                                    <div class="menu-leaf p-3 rounded border-0" 
+                                         data-action="{{ menu.action_type }}"
+                                         style="margin-left: {{ level * 15 }}px; cursor: pointer;"
+                                         onclick="loadScreen('{{ menu.name or 'Unnamed Menu' }}', '{{ menu.id }}', '{{ menu.action_type }}', '{{ menu.processed_url or menu.button_1 or '' }}')"
+                                         tabindex="0"
+                                         role="button">
+                                        <div class="d-flex align-items-center">
+                                            {% if menu.action_type == 'R' %}
+                                                <i class="fas fa-chart-bar text-success me-2"></i>
+                                            {% elif menu.action_type == 'F' %}
+                                                <i class="fas fa-edit text-primary me-2"></i>
+                                            {% elif menu.action_type == 'U' %}
+                                                <i class="fas fa-tools text-info me-2"></i>
+                                            {% elif menu.action_type == 'Q' %}
+                                                <i class="fas fa-search text-secondary me-2"></i>
+                                            {% else %}
+                                                <i class="fas fa-cog text-dark me-2"></i>
+                                            {% endif %}
+                                            
+                                            <span class="flex-grow-1" style="font-size: 12px;">{{ menu.name or 'Unnamed Menu' }}</span>
+                                            
+                                            {% if menu.action_type == 'R' %}
+                                                <span class="badge bg-success">R</span>
+                                            {% elif menu.action_type == 'F' %}
+                                                <span class="badge bg-primary">F</span>
+                                            {% elif menu.action_type == 'U' %}
+                                                <span class="badge bg-info">U</span>
+                                            {% elif menu.action_type == 'Q' %}
+                                                <span class="badge bg-secondary">Q</span>
+                                            {% else %}
+                                                <span class="badge bg-dark">{{ menu.action_type }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endmacro %}
+
+                    <!-- Render only ROOT level menus initially -->
+                    {% for menu in user_menus %}
+                        {{ render_menu(menu, 0) }}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="opacity: 0.5;"></i>
+                        <h6>No menus available</h6>
+                        <p class="small">Contact your administrator for access</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Main Content Area (70% width) -->
+        <div class="col-9 h-100" id="mainContent">
+            <!-- Dynamic Content Area -->
+            <div class="p-4 h-100" id="contentArea" style="overflow-y: auto;">
+                <!-- No default welcome screen - Content area starts empty -->
+                <div id="welcomeScreen" class="d-none">
+                </div>
+
+                <!-- Dynamic Screen Content (Hidden initially) -->
+                <div id="screenContent" class="d-none h-100">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 fw-bold" id="screenTitle">Screen Title</h6>
+                                <small class="text-muted" id="screenInfo">Screen Information</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="closeScreen()">
+                                <i class="fas fa-times me-1"></i>Close
+                            </button>
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center" id="screenBody">
+                            <!-- Dynamic content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    updateSessionTime();
+    
+    // Initially collapse all menus to show only root level
+    collapseAll();
+    
+    // Hide welcome screen by default (keep content area empty)
+    document.getElementById('welcomeScreen').classList.add('d-none');
+
+    // Clear any loading indicators immediately
+    const allLoadingElements = document.querySelectorAll(
+        '[id*="loading"], [class*="loading"], [id*="spinner"], [class*="spinner"], .spinner-border, .spinner-grow'
+    );
+    
+    allLoadingElements.forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // Check for signals from other pages to clear loading
+    try {
+        if (localStorage.getItem('clearDashboardLoading') === 'true') {
+            localStorage.removeItem('clearDashboardLoading');
+            // Force hide any loading states
+            setTimeout(() => {
+                allLoadingElements.forEach(el => {
+                    el.style.display = 'none';
+                    el.remove();
+                });
+            }, 100);
+        }
+    } catch(e) {}    
+});
+
+function updateDateTime() {
+    const now = new Date();
+    const options = { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+    };
+    const dateTimeElement = document.getElementById('currentDateTime');
+    if (dateTimeElement) {
+        dateTimeElement.textContent = now.toLocaleDateString('en-US', options);
+    }
+}
+
+function updateSessionTime() {
+    const loginTimeStr = '{{ session.login_time }}';
+    if (loginTimeStr) {
+        try {
+            const loginDate = new Date(loginTimeStr);
+            const now = new Date();
+            const diff = Math.floor((now - loginDate) / 1000 / 60);
+            const sessionTimeElement = document.getElementById('sessionTime');
+            if (sessionTimeElement) {
+                sessionTimeElement.textContent = diff + ' min';
+            }
+        } catch (e) {
+            const sessionTimeElement = document.getElementById('sessionTime');
+            if (sessionTimeElement) {
+                sessionTimeElement.textContent = 'Active';
+            }
+        }
+    }
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebarMenu');
+    const mainContent = document.getElementById('mainContent');
+    const toggleIcon = document.getElementById('sidebarToggleIcon');
+    
+    if (sidebar.classList.contains('d-none')) {
+        sidebar.classList.remove('d-none');
+        mainContent.className = 'col-9 h-100';
+        toggleIcon.className = 'fas fa-chevron-left';
+    } else {
+        sidebar.classList.add('d-none');
+        mainContent.className = 'col-12 h-100';
+        toggleIcon.className = 'fas fa-chevron-right';
+    }
+}
+
+function toggleMenuNode(element, menuId) {
+    const icon = document.getElementById('icon-' + menuId);
+    const children = document.getElementById('children-' + menuId);
+    
+    if (children.classList.contains('d-none')) {
+        children.classList.remove('d-none');
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+        element.style.background = 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 179, 237, 0.15) 100%)';
+        element.setAttribute('aria-expanded', 'true');
+    } else {
+        children.classList.add('d-none');
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+        element.style.background = 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(99, 179, 237, 0.08) 100%)';
+        element.setAttribute('aria-expanded', 'false');
+    }
+}
+
+function highlightMenuItem(element, actionType) {
+    const colors = {
+        'R': 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.05) 100%)',
+        'F': 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.05) 100%)',
+        'U': 'linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0.05) 100%)',
+        'Q': 'linear-gradient(135deg, rgba(107, 114, 128, 0.12) 0%, rgba(107, 114, 128, 0.05) 100%)'
+    };
+    element.style.background = colors[actionType] || 'linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.9) 100%)';
+}
+
+function unhighlightMenuItem(element) {
+    element.style.background = 'linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.9) 100%)';
+}
+
+// UPDATED LOADSCREEN FUNCTION - FIXED to use processed_url
+function loadScreen(menuName, menuId, actionType, buttonLink) {
+    document.getElementById('welcomeScreen').classList.add('d-none');
+    document.getElementById('screenContent').classList.remove('d-none');
+    
+    // Icons for different action types
+    const actionIcons = {
+        'R': 'chart-bar',
+        'F': 'edit', 
+        'U': 'tools',
+        'Q': 'search',
+        'M': 'folder'
+    };
+    
+    const actionColors = {
+        'R': 'success',
+        'F': 'primary',
+        'U': 'info',
+        'Q': 'secondary',
+        'M': 'warning'
+    };
+    
+    const icon = actionIcons[actionType] || 'cog';
+    const color = actionColors[actionType] || 'dark';
+    
+    document.getElementById('screenTitle').textContent = menuName;
+    document.getElementById('screenInfo').textContent = 'Type: ' + actionType + ' | ID: ' + menuId;
+    
+    let content = '';
+    
+    // ENHANCED: Handle processed URLs (no need for :id replacement)
+    if (buttonLink && buttonLink !== '' && buttonLink !== '#') {
+        // Check if this is already a processed URL or needs processing
+        let actualLink = buttonLink;
+        
+        // Only do :id replacement if the URL still contains placeholders
+        if (buttonLink.includes(':id')) {
+            actualLink = buttonLink.replace(':id', menuId);
+        }
+        
+        // ENHANCED: Better URL pattern detection
+        let purpose = 'Function';
+        let description = 'Execute function';
+        let buttonText = 'Open Function';
+        
+        if (actualLink.includes('/reports/')) {
+            purpose = 'Report';
+            description = 'Configure parameters and generate report';
+            buttonText = 'Open Report Parameters';
+        } else if (actualLink.includes('/form/')) {
+            purpose = 'Form';
+            description = 'Data entry and management form';
+            buttonText = 'Open Form';
+        } else if (actualLink.includes('/query/')) {
+            purpose = 'Query';
+            description = 'Data query and search interface';
+            buttonText = 'Open Query';
+        } else if (actualLink.includes('/utility/')) {
+            purpose = 'Utility';
+            description = 'System utility and tools';
+            buttonText = 'Open Utility';
+        }
+        
+        // DEBUG: Show the actual URL being used
+        console.log('Menu:', menuName, 'Original:', buttonLink, 'Processed:', actualLink);
+        
+        content = '<div class="text-center py-5">' +
+                  '<div class="mb-3">' +
+                  '<div class="loading-spinner mx-auto mb-3 d-none" id="loadingSpinner"></div>' +
+                  '<i class="fas fa-' + icon + ' fa-4x text-' + color + ' mb-3"></i>' +
+                  '</div>' +
+                  '<h4 class="mb-2">' + purpose + ': ' + menuName + '</h4>' +
+                  '<p class="text-muted mb-3 lead">' + description + '</p>' +
+                  // ENHANCED: Show debug info
+                  '<div class="alert alert-info small mb-3">' +
+                  '<strong>Debug:</strong> URL: <code>' + actualLink + '</code>' +
+                  '</div>' +
+                  '<div class="d-flex justify-content-center gap-2 flex-wrap">' +
+                  '<a href="' + actualLink + '" class="btn btn-' + color + ' btn-lg" onclick="showLoading()">' +
+                  '<i class="fas fa-' + icon + ' me-2"></i>' + buttonText + '</a>' +
+                  '<button class="btn btn-outline-secondary btn-lg" onclick="closeScreen()">' +
+                  '<i class="fas fa-arrow-left me-2"></i>Back to Menu</button>' +
+                  '</div>' +
+                  '</div>';
+                  
+    } else {
+        // No link configured
+        content = '<div class="text-center py-4">' +
+                  '<div class="mb-3">' +
+                  '<i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>' +
+                  '</div>' +
+                  '<h4 class="mb-2">Function: ' + menuName + '</h4>' +
+                  '<p class="text-muted mb-3 lead">No link configured for this menu item</p>' +
+                  '<div class="d-flex justify-content-center gap-2 flex-wrap">' +
+                  '<button class="btn btn-secondary btn-lg" disabled>' +
+                  '<i class="fas fa-link-slash me-2"></i>No Link Available</button>' +
+                  '<button class="btn btn-outline-secondary btn-lg" onclick="closeScreen()">' +
+                  '<i class="fas fa-arrow-left me-2"></i>Back to Menu</button>' +
+                  '</div>' +
+                  '</div>';
+    }
+    
+    document.getElementById('screenBody').innerHTML = content;
+    
+    // Highlight selected menu item
+    document.querySelectorAll('.menu-leaf').forEach(function(el) {
+        el.classList.remove('selected');
+        el.style.background = 'linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.9) 100%)';
+        el.style.transform = 'translateX(0)';
+        el.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.05)';
+    });
+    
+    if (event && event.target) {
+        const closest = event.target.closest('.menu-leaf');
+        if (closest) {
+            closest.classList.add('selected');
+        }
+    }
+}
+
+function closeScreen() {
+    // Hide screen content but don't show welcome screen
+    document.getElementById('screenContent').classList.add('d-none');
+    
+    document.querySelectorAll('.menu-leaf').forEach(function(el) {
+        el.classList.remove('selected');
+        el.style.background = 'linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.9) 100%)';
+        el.style.transform = 'translateX(0)';
+        el.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.05)';
+    });
+    
+    // Keep welcome screen hidden (don't show it)
+    document.getElementById('welcomeScreen').classList.add('d-none');
+}
+
+function showLoading() {
+    const spinner = document.getElementById('loadingSpinner');
+    if (spinner) {
+        spinner.classList.remove('d-none');
+    }
+}
+
+function collapseAll() {
+    document.querySelectorAll('.menu-children').forEach(function(children) {
+        children.classList.add('d-none');
+    });
+    document.querySelectorAll('.toggle-icon').forEach(function(icon) {
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+    });
+    document.querySelectorAll('.menu-parent').forEach(function(parent) {
+        parent.setAttribute('aria-expanded', 'false');
+        parent.style.background = 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(99, 179, 237, 0.08) 100%)';
+    });
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-' + type + ' position-fixed';
+    toast.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);';
+    toast.innerHTML = message + 
+        '<button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>';
+    document.body.appendChild(toast);
+    
+    // Add entrance animation
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+        toast.style.transition = 'all 0.3s ease';
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    setTimeout(function() {
+        if (toast.parentElement) {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 3000);
+}
+
+// Add keyboard navigation
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeScreen();
+    }
+});
+
+// Add smooth scrolling for better UX
+document.getElementById('menuTree').addEventListener('scroll', function() {
+    const scrolled = this.scrollTop;
+    const rate = scrolled * -0.3;
+    
+    // Add subtle parallax effect to sidebar header
+    const header = document.querySelector('.sidebar-header');
+    if (header) {
+        header.style.transform = `translateY(${rate}px)`;
+    }
+});
+
+// Enhanced menu item interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover sound effect simulation (visual feedback)
+    document.querySelectorAll('.menu-leaf, .menu-parent').forEach(function(item) {
+        item.addEventListener('mouseenter', function() {
+            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        });
+    });
+    
+    // Add click ripple effect
+    document.querySelectorAll('.menu-leaf').forEach(function(item) {
+        item.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                left: ${x}px;
+                top: ${y}px;
+                background: rgba(255,255,255,0.6);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: ripple 0.6s ease-out;
+                pointer-events: none;
+                z-index: 1000;
+            `;
+            
+            this.style.position = 'relative';
+            this.style.overflow = 'hidden';
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                if (ripple.parentNode) {
+                    ripple.parentNode.removeChild(ripple);
+                }
+            }, 600);
+        });
+    });
+    
+    // Add CSS for ripple animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes ripple {
+            to {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+// Enhanced accessibility features
+document.addEventListener('keydown', function(e) {
+    const focusedElement = document.activeElement;
+    
+    if (focusedElement.classList.contains('menu-parent')) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            focusedElement.click();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextElement = focusedElement.closest('.parent-menu-container').nextElementSibling;
+            if (nextElement) {
+                const nextFocusable = nextElement.querySelector('.menu-parent, .menu-leaf');
+                if (nextFocusable) nextFocusable.focus();
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevElement = focusedElement.closest('.parent-menu-container').previousElementSibling;
+            if (prevElement) {
+                const prevFocusable = prevElement.querySelector('.menu-parent, .menu-leaf');
+                if (prevFocusable) prevFocusable.focus();
+            }
+        }
+    }
+    
+    if (focusedElement.classList.contains('menu-leaf')) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            focusedElement.click();
+        }
+    }
+});
+
+// Performance optimization for smooth animations
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Optimize scroll performance
+const optimizedScrollHandler = debounce(function() {
+    // Scroll optimizations if needed
+}, 10);
+
+document.getElementById('contentArea').addEventListener('scroll', optimizedScrollHandler);
+
+/* COMMENTED OUT FUNCTIONS - READY FOR FUTURE USE
+
+// Menu search functionality
+function searchMenus() {
+    const searchTerm = document.getElementById('menuSearch').value.toLowerCase();
+    const menuItems = document.querySelectorAll('.menu-item');
+    
+    menuItems.forEach(function(item) {
+        const searchText = item.getAttribute('data-search') || '';
+        if (searchTerm === '' || searchText.includes(searchTerm)) {
+            item.style.display = 'block';
+            item.style.animation = 'fadeIn 0.3s ease';
+        } else {
+            item.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                item.style.display = 'none';
+            }, 300);
+        }
+    });
+}
+
+// Expand all menu nodes
+function expandAll() {
+    document.querySelectorAll('.menu-children').forEach(function(children) {
+        children.classList.remove('d-none');
+    });
+    document.querySelectorAll('.toggle-icon').forEach(function(icon) {
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+    });
+    document.querySelectorAll('.menu-parent').forEach(function(parent) {
+        parent.setAttribute('aria-expanded', 'true');
+        parent.style.background = 'linear-gradient(135deg, rgba(255,193,7,0.3) 0%, rgba(255,193,7,0.2) 100%)';
+    });
+    
+    showToast('All menus expanded', 'info');
+}
+
+// Show only functional menu items (hide parent folders)
+function showOnlyFunctional() {
+    document.querySelectorAll('.parent-menu-container').forEach(function(el) {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.functional-menu-container').forEach(function(el) {
+        el.style.display = 'block';
+        el.style.marginLeft = '0';
+    });
+    
+    showToast('Showing only functional items', 'info');
+}
+
+// Refresh the entire page
+function refreshMenus() {
+    // Add loading animation before refresh
+    const loader = document.createElement('div');
+    loader.className = 'loading-overlay';
+    loader.innerHTML = '<div class="loading-spinner"></div>';
+    document.body.appendChild(loader);
+    
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
+}
+
+*/
+</script>
+{% endblock %}

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% if menu_data %}{{ menu_data.MENU_SCR_NAME }}{% else %}Customerwise Sales Analysis{% endif %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .form-control {
+            text-transform: uppercase;
+        }
+        .parameter-grid {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h3 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>{% if menu_data %}{{ menu_data.MENU_SCR_NAME }}{% else %}Customerwise Sales Analysis{% endif %}
+                        </h3>
+                        <small>Configure report parameters and generate analysis</small>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <form id="reportForm" action="/report/{{ form_id }}/{{ menu_id }}/generate" method="POST">
+                            <input type="hidden" name="form_id" value="{{ form_id }}">
+                            <input type="hidden" name="menu_id" value="{{ menu_id }}">
+                            
+                            <!-- Parameter Grid -->
+                            <div class="parameter-grid mb-4">
+                                <div class="row g-3">
+                                    <!-- SDM Code Range -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-user-tie me-1"></i>From SDM Code
+                                        </label>
+                                        <input type="text" class="form-control" name="fromSdmCode" placeholder="Enter SDM Code">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-user-tie me-1"></i>To SDM Code
+                                        </label>
+                                        <input type="text" class="form-control" name="toSdmCode" value="ZZZZZZ">
+                                    </div>
+                                    
+                                    <!-- Customer Code Range -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-users me-1"></i>From Cust Code
+                                        </label>
+                                        <input type="text" class="form-control" name="fromCustCode" placeholder="Enter Customer Code">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-users me-1"></i>To Cust Code
+                                        </label>
+                                        <input type="text" class="form-control" name="toCustCode" value="ZZZZZZ">
+                                    </div>
+                                    
+                                    <!-- Flash Code Range -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-bolt me-1"></i>From Flash Code
+                                        </label>
+                                        <input type="text" class="form-control" name="fromFlashCode" placeholder="Enter Flash Code">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-bolt me-1"></i>To Flash Code
+                                        </label>
+                                        <input type="text" class="form-control" name="toFlashCode" value="ZZZZZZ">
+                                    </div>
+                                    
+                                    <!-- Item Code Range -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-box me-1"></i>From Item Code
+                                        </label>
+                                        <input type="text" class="form-control" name="fromItemCode" placeholder="Enter Item Code">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-box me-1"></i>To Item Code
+                                        </label>
+                                        <input type="text" class="form-control" name="toItemCode" value="ZZZZZZ">
+                                    </div>
+                                    
+                                    <!-- Location Code Range -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-map-marker-alt me-1"></i>From Locn Code
+                                        </label>
+                                        <input type="text" class="form-control" name="fromLocnCode" placeholder="Enter Location Code">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-map-marker-alt me-1"></i>To Locn Code
+                                        </label>
+                                        <input type="text" class="form-control" name="toLocnCode" value="ZZZZZZ">
+                                    </div>
+                                    
+                                    <!-- Date Range -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-calendar-alt me-1"></i>From Date <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" name="fromDate" placeholder="dd/mm/yyyy" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold text-primary">
+                                            <i class="fas fa-calendar-alt me-1"></i>To Date
+                                        </label>
+                                        <input type="text" class="form-control" name="toDate" placeholder="dd/mm/yyyy" value="20/08/2025">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Report Options -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">
+                                                <i class="fas fa-cog me-2"></i>Report Type
+                                            </h6>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio" name="reportType" id="detail" value="detail" checked>
+                                                <label class="form-check-label fw-bold" for="detail">
+                                                    <i class="fas fa-list me-1 text-info"></i>Detail
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="reportType" id="summary" value="summary">
+                                                <label class="form-check-label fw-bold" for="summary">
+                                                    <i class="fas fa-chart-pie me-1 text-warning"></i>Summary
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">
+                                                <i class="fas fa-file-export me-2"></i>Output Format
+                                            </h6>
+                                            <div class="form-check mb-1">
+                                                <input class="form-check-input" type="radio" name="outputFormat" id="view" value="view" checked>
+                                                <label class="form-check-label fw-bold" for="view">
+                                                    <i class="fas fa-eye me-1 text-primary"></i>View
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-1">
+                                                <input class="form-check-input" type="radio" name="outputFormat" id="excel" value="excel">
+                                                <label class="form-check-label fw-bold" for="excel">
+                                                    <i class="fas fa-file-excel me-1 text-success"></i>Excel
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="outputFormat" id="pdf" value="pdf">
+                                                <label class="form-check-label fw-bold" for="pdf">
+                                                    <i class="fas fa-file-pdf me-1 text-danger"></i>PDF
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title text-primary">
+                                                <i class="fas fa-tools me-2"></i>Actions
+                                            </h6>
+                                            <button type="submit" class="btn btn-primary btn-lg mb-2 w-100">
+                                                <i class="fas fa-play me-2"></i>Generate Report
+                                            </button>
+                                            <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary w-100">
+                                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Loading Indicator -->
+                            <div class="text-center mt-3" id="loadingDiv" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Generating report, please wait...</p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default dates
+            const fromDateField = document.querySelector('input[name="fromDate"]');
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            
+            if (fromDateField) {
+                fromDateField.value = dd + '/' + mm + '/' + yyyy;
+            }
+            
+            // Auto-uppercase input fields
+            document.querySelectorAll('.form-control').forEach(input => {
+                if (input.type === 'text' && input.name !== 'fromDate' && input.name !== 'toDate') {
+                    input.addEventListener('input', function() {
+                        this.value = this.value.toUpperCase();
+                    });
+                }
+            });
+        });
+        
+        // Form submission with loading
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const loadingDiv = document.getElementById('loadingDiv');
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+            
+            // Let the form submit normally
+            return true;
+        });
+    </script>
+</body>
+</html>

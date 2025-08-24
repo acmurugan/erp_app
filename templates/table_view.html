@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ display_name }} - ERP System{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">{{ display_name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>{{ display_name }}</h2>
+                <p class="text-muted">
+                    Showing {{ showing_rows }} of {{ total_rows }} records
+                    {% if showing_rows < total_rows %}
+                        (first {{ showing_rows }} records only)
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if data %}
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    Table Data
+                    <span class="badge bg-primary ms-2">{{ columns|length }} columns</span>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                {% for column in columns %}
+                                <th>
+                                    {{ column.name }}
+                                    <br><small class="text-muted">{{ column.type }}</small>
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>
+                                    {% if cell is none %}
+                                        <span class="text-muted fst-italic">NULL</span>
+                                    {% elif cell == '' %}
+                                        <span class="text-muted fst-italic">Empty</span>
+                                    {% else %}
+                                        {{ cell }}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if showing_rows < total_rows %}
+<div class="row mt-3">
+    <div class="col">
+        <div class="alert alert-info">
+            <strong>Note:</strong> Only showing the first {{ showing_rows }} records for performance. 
+            Total records in table: {{ total_rows }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="row">
+    <div class="col">
+        <div class="alert alert-warning text-center">
+            <h4>No Data Found</h4>
+            <p>This table appears to be empty or there was an error loading the data.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
