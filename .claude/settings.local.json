@@ -1,4 +1,4 @@
-{
+  {
   "permissions": {
     "allow": [
       "Bash(python:*)",
@@ -6,7 +6,8 @@
       "Bash(curl:*)",
       "Bash(git checkout:*)",
       "Bash(mv:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
